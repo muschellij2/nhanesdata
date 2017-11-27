@@ -4,11 +4,17 @@
 \alias{process_flags}
 \title{Process wear/non-wear flags for NHANES 2003-2004 and 2005-2006 accelerometry data}
 \usage{
-process_flags(write = FALSE, window, tol, tol.upper, ...)
+process_flags(write = FALSE, local = FALSE, localpath = NULL,
+  window = 90, tol = 2, tol.upper = 99, ...)
 }
 \arguments{
 \item{write}{logical argument indicating whether a csv file of wear/non-wear flags
 should be created for each wave of processed data. Defaults to FALSE.}
+
+\item{local}{logical argument indicating whether the processed .rda accelerometry files are stored locally.
+If FALSE, will load them from the package data.}
+
+\item{localpath}{character string indicating where the locally processed .rda files are (NEED TO ADD IN THIS FUNCTIONALITY)}
 
 \item{window}{size of the moving window used to assess non-wear in minutes. Defaults to 90 minutes.
 See \code{\link{accel.weartime}} for more details.}
@@ -30,9 +36,7 @@ This function creates wear/non-wear flag matrices for processed NHANES 2003-2004
 }
 \examples{
 \dontrun{
-
 process_accel(write=FALSE)
-
 }
 
 }

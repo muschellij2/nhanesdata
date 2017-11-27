@@ -10,24 +10,40 @@
 #' @param write logical argument indicating whether a csv file should be created for each wave of processed data.
 #'   Defaults to FALSE.
 #'
+#' @param local logical argument indicating whether the zippped raw .xpt accelerometry files are stored locally.
+#' If FALSE, will download the data into a temporary file from the CDC website and process the data. If TRUE,
+#' the zipped data will be sourced locally. Defaults to FALSE.
+#'
+#' @param localpath character string indicating where the locally zipped raw .xpt files are. -- NEED TO ADD IN THIS FUNCITONALITY
+#'
 #' @examples
 #' \dontrun{
-#'
 #' process_accel(write=FALSE)
-#'
 #' }
 #'
 #' @importFrom haven read_xpt
 #'
-#' @importFrom utils write.csv
+#' @importFrom utils write.csv unzip
 #'
 #' @export
-process_accel <- function(write=FALSE){
+process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
         waves_accel <- paste0("PAXRAW_", c("C","D"))
         names_accel <- c("0304","0506")
+        urls <- c("https://wwwn.cdc.gov/Nchs/Nhanes/2003-2004/PAXRAW_C.ZIP",
+                  "https://wwwn.cdc.gov/Nchs/Nhanes/2005-2006/PAXRAW_D.ZIP")
         for(i in seq_along(waves_accel)){
-                sim.data <- read_xpt(unzip(paste0(waves_accel[i],".zip"),
-                                           tolower(paste0(waves_accel[i],".xpt"))))
+                if(!local){
+                        temp <- tempfile()
+                        download.file(urls[i], temp)
+                        sim.data <- read_xpt(unzip(temp,
+                                                   tolower(paste0(waves_accel[i],".xpt"))))
+                        unlink(temp)
+                }
+                if(local){
+                        sim.data <- read_xpt(unzip(paste0(waves_accel[i],".zip"),
+                                                   tolower(paste0(waves_accel[i],".xpt"))))
+                }
+
                 uid      <- unique(sim.data$SEQN)
 
                 print('loaded data')
@@ -44,9 +60,6 @@ process_accel <- function(write=FALSE){
                 rm(list=c("n","seqn","paxn"))
 
                 ## merge data sets to create data will NAs for missing days/times
-                # full.na  <- left_join(full.list, sim.data, by=c("SEQN","PAXN"))
-                # rm(list=c("full.list"))
-
                 inx <- match(paste0(full.list$SEQN, "_", full.list$PAXN),
                              paste0(sim.data$SEQN, "_", sim.data$PAXN))
                 full.na <- cbind(full.list, sim.data[inx,-c(1,5)])
@@ -98,7 +111,7 @@ process_accel <- function(write=FALSE){
 
 
                 if(write){
-                        eval(parse(text=paste0('save(', out.name,',file="', out.name, '.Rda")')))
+                        eval(parse(text=paste0('save(', out.name,',file="', out.name, '.rda")')))
                 }
 
                 rm(list=c("pax","pax.wide","col.name","out.name","idweekday"))
@@ -106,8 +119,6 @@ process_accel <- function(write=FALSE){
                 message(paste("Wave", i, "Processed"))
         }
 }
-
-
 
 
 
@@ -122,6 +133,11 @@ process_accel <- function(write=FALSE){
 #'
 #' @param write logical argument indicating whether a csv file of wear/non-wear flags
 #' should be created for each wave of processed data. Defaults to FALSE.
+#'
+#' @param local logical argument indicating whether the processed .rda accelerometry files are stored locally.
+#' If FALSE, will load them from the package data.
+#'
+#' @param localpath character string indicating where the locally processed .rda files are (NEED TO ADD IN THIS FUNCTIONALITY)
 #'
 #' @param window size of the moving window used to assess non-wear in minutes. Defaults to 90 minutes.
 #' See \code{\link{accel.weartime}} for more details.
@@ -141,9 +157,7 @@ process_accel <- function(write=FALSE){
 #'
 #' @examples
 #' \dontrun{
-#'
 #' process_accel(write=FALSE)
-#'
 #' }
 #'
 #' @references
@@ -153,8 +167,48 @@ process_accel <- function(write=FALSE){
 #' @importFrom utils write.csv
 #'
 #' @export
-process_flags <- function(write=FALSE, window, tol, tol.upper, ...){
+process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
+                          window=90, tol=2, tol.upper=99, ...){
+        waves_accel <- paste0("PAXINTEN_", c("C","D"))
+        for(i in seq_along(waves_accel)){
+                if(!local){
+                        data(waves_accel[i], envir = evnironment(), package="nhanesdata")
+                }
+                if(local){
+                        load(paste0(localpath, waves_accel[i]))
+                }
 
+                eval(parse(text=paste0("activity_data = as.matrix(",waves_accel[i],"data[,paste0(\"MIN\",1:1440)])")))
+                activity_data[is.na(activity_data)] = 0    # replace NAs with zeros
+
+                WMX = matrix(NA,nrow = nrow(activity_data), ncol = ncol(activity_data))
+
+                t1 = Sys.time()
+                pb <- txtProgressBar(min = 1, max = nrow(activity_data), style = 3)
+                for (i in 1 : nrow(activity_data)){
+
+                        activity_data_i = activity_data[i,]
+                        wearMark = accel.weartime(activity_data_i,window = window,
+                                                  tol = tolerance, tol.upper = cpmmax)
+                        WMX[i,] = wearMark
+                        setTxtProgressBar(pb, i)
+
+                }
+
+                t2 = Sys.time()
+                print(paste('total time:', as.character(t2 - t1)))
+
+                out = cbind(data[,1:4], WMX)
+                names(out) = names(data)
+
+                out[is.na(data)] = NA ## put NAs back where they belong
+
+                name = substr(file,9,16)
+                write.csv(out, paste0('WearNonWear/WNW', name), row.names = FALSE)
+
+
+
+        }
 }
 
 
