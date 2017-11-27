@@ -25,6 +25,3 @@ process_accel(write=FALSE)
 }
 
 }
-\references{
-
-}

@@ -17,11 +17,9 @@
 #'
 #' }
 #'
-#' @references
+#' @importFrom haven read_xpt
 #'
-#' @ importFrom haven read_xpt
-#'
-#' @ importFrom utils write.csv
+#' @importFrom utils write.csv
 #'
 #' @export
 process_accel <- function(write=FALSE){
@@ -150,9 +148,9 @@ process_accel <- function(write=FALSE){
 #'
 #' @references
 #'
-#' @ importFrom accelerometry accel.weartime
+#' @importFrom accelerometry accel.weartime
 #'
-#' @ importFrom utils write.csv
+#' @importFrom utils write.csv
 #'
 #' @export
 process_flags <- function(write=FALSE, window, tol, tol.upper, ...){
@@ -187,9 +185,9 @@ process_flags <- function(write=FALSE, window, tol, tol.upper, ...){
 #'
 #' @references
 #'
-#' @ importFrom accelerometry accel.weartime
+#' @importFrom accelerometry accel.weartime
 #'
-#' @ importFrom utils write.csv
+#' @importFrom utils write.csv
 #'
 #' @export
 process_mort <- function(write=FALSE){
@@ -226,7 +224,7 @@ process_mort <- function(write=FALSE){
 #'
 #' @references
 #'
-#' @ importFrom utils write.csv
+#' @importFrom utils write.csv
 #'
 #' @export
 process_covar <- function(write=FALSE){
