@@ -5,8 +5,7 @@ Version: 1.0
 Author: Andrew Leroux [aut, cre]
 	Ciprian Crainiceanu[aut, cre]
 Maintainer: Andrew Leroux <aleroux2@jhu.edu>
-Description: A data package for processed NHANES accelerometry data with 
-accompanying processing pipeline code.
+Description: A data package for processed NHANES accelerometry data with accompanying processing pipeline code.
 Depends:
     R (>= 3.2.4), accelerometry (>= 2.2.5), nhanesaccel (>= 2.1.1)
 License: GPL (>= 3)
@@ -15,3 +14,4 @@ LazyData: true
 Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
+RoxygenNote: 6.0.1

@@ -20,6 +20,7 @@
 #' @references
 #'
 #' @ importFrom haven read_xpt
+#'
 #' @ importFrom utils write.csv
 #'
 #' @export
@@ -150,6 +151,7 @@ process_accel <- function(write=FALSE){
 #' @references
 #'
 #' @ importFrom accelerometry accel.weartime
+#'
 #' @ importFrom utils write.csv
 #'
 #' @export
@@ -186,6 +188,7 @@ process_flags <- function(write=FALSE, window, tol, tol.upper, ...){
 #' @references
 #'
 #' @ importFrom accelerometry accel.weartime
+#'
 #' @ importFrom utils write.csv
 #'
 #' @export
