@@ -7,7 +7,7 @@
 #' amount of RAM (~12 GB peak). To avoid crashing your computer when running, please ensure you have
 #' enough RAM available.
 #'
-#' @param write logical argument indicating whether a csv file should be created for each wave of processed data.
+#' @param write logical argument indicating whether a .rda file should be created for each wave of processed data.
 #'   Defaults to FALSE.
 #'
 #' @param local logical argument indicating whether the zippped raw .xpt accelerometry files are stored locally.
@@ -131,7 +131,7 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
 #'
 #'
 #'
-#' @param write logical argument indicating whether a csv file of wear/non-wear flags
+#' @param write logical argument indicating whether a .rda file of wear/non-wear flags
 #' should be created for each wave of processed data. Defaults to FALSE.
 #'
 #' @param local logical argument indicating whether the processed .rda accelerometry files are stored locally.
@@ -172,39 +172,44 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
         waves_accel <- paste0("PAXINTEN_", c("C","D"))
         for(i in seq_along(waves_accel)){
                 if(!local){
-                        data(waves_accel[i], envir = evnironment(), package="nhanesdata")
+                        data(list=waves_accel[i], envir = environment(), package="nhanesdata")
                 }
                 if(local){
                         load(paste0(localpath, waves_accel[i]))
                 }
 
-                eval(parse(text=paste0("activity_data = as.matrix(",waves_accel[i],"data[,paste0(\"MIN\",1:1440)])")))
+                eval(parse(text=paste0("full_data = ",waves_accel[i])))
+                activity_data <- as.matrix(full_data[,paste0("MIN",1:1440)])
                 activity_data[is.na(activity_data)] = 0    # replace NAs with zeros
 
                 WMX = matrix(NA,nrow = nrow(activity_data), ncol = ncol(activity_data))
 
                 t1 = Sys.time()
                 pb <- txtProgressBar(min = 1, max = nrow(activity_data), style = 3)
-                for (i in 1 : nrow(activity_data)){
+                for (j in 1 : nrow(activity_data)){
 
-                        activity_data_i = activity_data[i,]
-                        wearMark = accel.weartime(activity_data_i,window = window,
-                                                  tol = tolerance, tol.upper = cpmmax)
-                        WMX[i,] = wearMark
-                        setTxtProgressBar(pb, i)
+                        activity_data_j = activity_data[j,]
+                        wearMark = accel.weartime(activity_data_j,window = window,
+                                                  tol = tol, tol.upper = tol.upper)
+                        WMX[j,] = wearMark
+                        setTxtProgressBar(pb, j)
 
                 }
 
                 t2 = Sys.time()
-                print(paste('total time:', as.character(t2 - t1)))
+                print(paste('total time:', as.character(round(t2 - t1,2))))
 
-                out = cbind(data[,1:4], WMX)
-                names(out) = names(data)
+                out = cbind(full_data[,1:4], WMX)
+                names(out) = names(full_data)
 
-                out[is.na(data)] = NA ## put NAs back where they belong
+                out[is.na(full_data)] = NA ## put NAs back where they belong
 
-                name = substr(file,9,16)
-                write.csv(out, paste0('WearNonWear/WNW', name), row.names = FALSE)
+                out.name <- paste0("Flags_", LETTERS[i+2])
+                assign(out.name, out, envir=parent.frame())
+                if(write){
+                        eval(parse(text=paste0('save(', out.name,',file="', out.name,
+                                               '.rda", envir=parent.frame())')))
+                }
 
 
 
@@ -226,7 +231,7 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
 #'
 #'
 #'
-#' @param write logical argument indicating whether a csv file of wear/non-wear flags
+#' @param write logical argument indicating whether a .rda file of wear/non-wear flags
 #' should be created for each wave of processed data. Defaults to FALSE.
 #'
 #'
@@ -245,6 +250,84 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
 #'
 #' @export
 process_mort <- function(write=FALSE){
+        waves_mort <- c("NHANES_2003_2004_MORT_2011_PUBLIC.dat",
+                        "NHANES_2005_2006_MORT_2011_PUBLIC.dat")
+
+        for(i in seq_along(waves_mort)){
+                path <- system.file("extdat/mort", waves_mort[i],
+                                    package = "nhanesdata")
+                raw.data = readLines(path)
+
+                N = length(raw.data)
+
+                seqn = NULL
+                eligstat = NULL
+                mortstat = NULL
+                causeavl = NULL
+                ucod_leading = NULL
+                diabetes = NULL
+                hyperten = NULL
+
+                permth_int = NULL
+                permth_exm = NULL
+                mortsrce_ndi = NULL
+                mortsrce_cms = NULL
+                mortsrce_ssa = NULL
+                mortsrce_dc = NULL
+                mortsrce_dcl= NULL
+
+
+                for (j in 1:N){
+
+                        seqn = rbind(seqn,substr(raw.data[j],1,5))
+                        eligstat = rbind(eligstat,substr(raw.data[j],15,15))
+                        mortstat = rbind(mortstat,substr(raw.data[j],16,16))
+                        causeavl = rbind(causeavl,substr(raw.data[j],17,17))
+                        ucod_leading = rbind(ucod_leading,substr(raw.data[j],18,20))
+                        diabetes = rbind(diabetes,substr(raw.data[j],21,21))
+                        hyperten = rbind(hyperten,substr(raw.data[j],22,22))
+
+                        permth_int = rbind(permth_int,substr(raw.data[j],44,46))
+                        permth_exm = rbind(permth_exm,substr(raw.data[j],47,49))
+
+                        mortsrce_ndi = rbind(mortsrce_ndi,substr(raw.data[j],50,50))
+                        mortsrce_cms = rbind(mortsrce_cms,substr(raw.data[j],51,51))
+                        mortsrce_ssa = rbind(mortsrce_ssa,substr(raw.data[j],52,52))
+                        mortsrce_dc = rbind(mortsrce_dc,substr(raw.data[j],53,53))
+                        mortsrce_dcl = rbind(mortsrce_dcl,substr(raw.data[j],54,54))
+
+                }
+
+
+                out.name <- paste0("Mortality_",LETTERS[i+2])
+                out = as.data.frame(cbind(seqn, eligstat,
+                                          mortstat, causeavl,
+                                          ucod_leading, diabetes,
+                                          hyperten,
+                                          permth_exm, permth_int,
+                                          mortsrce_ndi, mortsrce_cms,
+                                          mortsrce_ssa, mortsrce_dc,
+                                          mortsrce_dcl))
+
+                names(out) = c('seqn', 'eligstat',
+                               'mortstat', 'causeavl',
+                               'ucod_leading', 'diabetes',
+                               'hyperten',
+                               'permth_exm', 'permth_int',
+                               'mortsrce_ndi', 'mortsrce_cms',
+                               'mortsrce_ssa', 'mortsrce_dc',
+                               'mortsrce_dcl')
+
+                assign(out.name, out, envir=parent.frame())
+
+                if(write) {
+                        eval(parse(text=paste0('save(', out.name,',file="', out.name,
+                                               '.rda", envir=parent.frame())')))
+                }
+
+        }
+
+
 
 }
 
@@ -264,9 +347,17 @@ process_mort <- function(write=FALSE){
 #' comorbidity responses.
 #'
 #'
+#' @param cohorts numeric vector with entires corresponding to the first year of a given
+#' NHANES wave of interest. Will only accept cohorts 2003-2004 and beyond.
 #'
-#' @param write logical argument indicating whether a csv file of wear/non-wear flags
-#' should be created for each wave of processed data. Defaults to FALSE.
+#' @param varnames character vector indicating which column names are to be searched for.
+#' Will check all files in dataPath
+#'
+#' @param dataPath file path where covariate data are saved. Covariate data must be in .XPT format,
+#' and should be in their own folder. For example, PAXRAW_C.XPT should not be located in the folder with
+#' your covariate files. This will not cause an error, but the code will take much longer to run.
+#'
+#' @param write logical argument indicating whether a .rda file of covariate data. Defaults to FALSE.
 #'
 #'
 #'
@@ -278,17 +369,82 @@ process_mort <- function(write=FALSE){
 #'
 #' @references
 #'
-#' @importFrom utils write.csv
+#' @importFrom have read_xpt
 #'
 #' @export
-process_covar <- function(write=FALSE){
+process_covar <- function(cohorts=c(2003,2005),
+                      varnames = c('WTMEC2YR','WTINT2YR','SDMVPSU','SDMVSTRA',
+                                   'RIDAGEMN','RIDAGEEX','RIDRETH1','RIAGENDR',
+                                   'BMXWT','BMXHT','BMXBMI','DMDEDUC','DMDEDUC2',
+                                   'ALQ101', 'ALQ110','ALQ120Q','ALQ120U','ALQ130',
+                                   'SMQ020','SMD030','SMQ040','SMQ120','SMD130','SMQ140','SMQ150','SMD160','SMQ170',
+                                   'SMQ680','SMQ710','SMQ720','SMD641','SMD070',
+                                   'MCQ220','MCQ160F','MCQ160B','MCQ160C','PFQ061B','PFQ061C', 'DIQ010'),
+                      dataPath=NULL,
+                      write=FALSE){
+        years    <- seq(2003, 2023, by=2)
+        if(!all(cohorts %in% years)) stop("One or more cohorts invalid")
+        stopifnot(length(cohorts) >= 1)
+        stopifnot(is.vector(cohorts))
+
+        cohorts <- sort(cohorts)
+        varnames <- c('SEQN',varnames)
+        ## find all files of .xpt structure that correspond to the year specified in the data
+        if(is.null(dataPath)){
+                dataPath <- system.file("extdat/covar/",package="nhanesdata")
+        }
+        files_full   <- list.files(dataPath)
+
+        for(i in seq_along(cohorts)){
+                cohort <- cohorts[i]
+
+                pathExt <- paste('_', LETTERS[3:26], '.XPT', sep='')[which(years == cohort)]
+                files   <- files_full[substr(files_full, (nchar(files_full) - 5), nchar(files_full)) == pathExt]
+
+                if(length(files) == 0) next
+
+                ## find which files contain the variables requested by the user
+                covarMats <- lapply(files, function(x){
+                        mat <- read_xpt(paste0(dataPath,x))
+                        mat <- mat[,colnames(mat)%in%varnames,drop=FALSE]
+                        if(!is.null(dim(mat))) mat
+                        else NULL
+                })
+                ##
+                covarMats <- covarMats[!vapply(covarMats, is.null,logical(1))]
+                matchedNames <- lapply(covarMats, colnames)
+                numMatched   <- length(unlist(matchedNames))
+
+                if(numMatched == 0) stop('Error: No Variable Names Recognized for this Year/Variable Combination')
+                if(numMatched > 0)  message(
+                        paste("For", cohort, "cohort,",
+                              (numMatched - length(matchedNames)),
+                              'Covariates Found of', (length(varnames)-1),'specified.',
+                              'Missing covariates:',
+                              paste(setdiff(varnames, unlist(matchedNames)),collapse=", ") ))
+
+                ## Merge the covariate data
+                ids       <- sort(unique(unlist(lapply(covarMats, function(x) x[,'SEQN']))))
+                totalCols <- sum(vapply(covarMats, ncol, numeric(1))) - length(covarMats) + 1
+                CovarMat           <- matrix(NA,ncol=totalCols,nrow=length(ids))
+                colnames(CovarMat) <- c('SEQN', unlist(sapply(covarMats,function(x) colnames(x)[-1])))
+                CovarMat[,'SEQN']  <- ids
+                invisible(lapply(covarMats, function(x) CovarMat[,colnames(x)[-1]] <<- as.matrix(x[match(CovarMat[,'SEQN'],x[,'SEQN']),-1]) ) )
+
+
+                out.name <- paste0("Covariate_",substr(pathExt,2,2))
+
+                assign(out.name, CovarMat, envir=parent.frame())
+
+                if(write) {
+                        eval(parse(text=paste0('save(', out.name,',file="', out.name,
+                                               '.rda", envir=parent.frame())')))
+                }
+
+        }
+
 
 }
-
-
-
-
-
 
 
 
