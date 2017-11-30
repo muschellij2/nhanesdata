@@ -18,7 +18,9 @@
 #'
 #' @examples
 #' \dontrun{
-#' process_accel(write=FALSE)
+#' library("nhanesaccel")
+#' process_accel()
+#' process_flags()
 #' }
 #'
 #' @importFrom haven read_xpt
@@ -46,7 +48,6 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
 
                 uid      <- unique(sim.data$SEQN)
 
-                print('loaded data')
                 ## read_xpt reads all variables in as numeric
                 ## check for truncation on reading in
                 stopifnot(all(nchar(uid)==5))
@@ -65,7 +66,6 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
                 full.na <- cbind(full.list, sim.data[inx,-c(1,5)])
                 rm(list=c("full.list","inx"))
 
-                print('made it past merging')
 
                 ## create id and day of the week variables to fill in
                 ## note: this assumes PAXCAL/PAXSTAT do not change from with subjects
@@ -93,8 +93,6 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
                         inx_cur <- inx_cur + 7
                 }
                 rm(list=c("k","x","inx_cur","sim.data","u_data"))
-
-                print('made it to dates')
 
                 id2       <- rep(uid,each=7)
                 idweekday <- data.frame(SEQN=id2,PAXCAL=cal,PAXSTAT=stat,WEEKDAY=weekday)
@@ -170,15 +168,23 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
 process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
                           window=90, tol=2, tol.upper=99, ...){
         waves_accel <- paste0("PAXINTEN_", c("C","D"))
+        out.name    <- paste0("Flags_", LETTERS[3:4])
         for(i in seq_along(waves_accel)){
-                if(!local){
-                        data(list=waves_accel[i], envir = environment(), package="nhanesdata")
+                loaded <- waves_accel[i] %in% globalenv()
+                if(!loaded){
+                        if(!local){
+                                data(list=waves_accel[i], envir = environment(), package="nhanesdata")
+                        }
+                        if(local){
+                                load(paste0(localpath, waves_accel[i]))
+                        }
+                        eval(parse(text=paste0("full_data = ",waves_accel[i])))
                 }
-                if(local){
-                        load(paste0(localpath, waves_accel[i]))
+                if(loaded){
+                        message(paste( waves_accel[i],"found in the Global Environment. Using this object to create WNW flags."))
+                        eval(parse(text=paste0("full_data = ", globalenv()[[waves_accel[i]]])))
                 }
 
-                eval(parse(text=paste0("full_data = ",waves_accel[i])))
                 activity_data <- as.matrix(full_data[,paste0("MIN",1:1440)])
                 activity_data[is.na(activity_data)] = 0    # replace NAs with zeros
 
@@ -204,10 +210,9 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
 
                 out[is.na(full_data)] = NA ## put NAs back where they belong
 
-                out.name <- paste0("Flags_", LETTERS[i+2])
-                assign(out.name, out, envir=parent.frame())
+                assign(out.name[i], out, envir=parent.frame())
                 if(write){
-                        eval(parse(text=paste0('save(', out.name,',file="', out.name,
+                        eval(parse(text=paste0('save(', out.name[i],',file="', out.name[i],
                                                '.rda", envir=parent.frame())')))
                 }
 
@@ -448,6 +453,8 @@ process_covar <- function(cohorts=c(2003,2005),
 
 
 
-
+# process_flags()
+# process_mort()
+# process_covar()
 
 
