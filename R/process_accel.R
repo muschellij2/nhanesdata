@@ -170,7 +170,7 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
         waves_accel <- paste0("PAXINTEN_", c("C","D"))
         out.name    <- paste0("Flags_", LETTERS[3:4])
         for(i in seq_along(waves_accel)){
-                loaded <- waves_accel[i] %in% globalenv()
+                loaded <- waves_accel[i] %in% ls(globalenv())
                 if(!loaded){
                         if(!local){
                                 data(list=waves_accel[i], envir = environment(), package="nhanesdata")
@@ -182,7 +182,7 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
                 }
                 if(loaded){
                         message(paste( waves_accel[i],"found in the Global Environment. Using this object to create WNW flags."))
-                        eval(parse(text=paste0("full_data = ", globalenv()[[waves_accel[i]]])))
+                        eval(parse(text=paste0("full_data = globalenv()[[\"", waves_accel[i], "\"]]")))
                 }
 
                 activity_data <- as.matrix(full_data[,paste0("MIN",1:1440)])
@@ -305,16 +305,17 @@ process_mort <- function(write=FALSE){
 
 
                 out.name <- paste0("Mortality_",LETTERS[i+2])
-                out = as.data.frame(cbind(seqn, eligstat,
+                out <- data.frame(seqn, eligstat,
                                           mortstat, causeavl,
                                           ucod_leading, diabetes,
                                           hyperten,
                                           permth_exm, permth_int,
                                           mortsrce_ndi, mortsrce_cms,
                                           mortsrce_ssa, mortsrce_dc,
-                                          mortsrce_dcl))
+                                          mortsrce_dcl,
+                                    stringsAsFactors=FALSE)
 
-                names(out) = c('seqn', 'eligstat',
+                colnames(out) = c('SEQN', 'eligstat',
                                'mortstat', 'causeavl',
                                'ucod_leading', 'diabetes',
                                'hyperten',
@@ -436,6 +437,7 @@ process_covar <- function(cohorts=c(2003,2005),
                 CovarMat[,'SEQN']  <- ids
                 invisible(lapply(covarMats, function(x) CovarMat[,colnames(x)[-1]] <<- as.matrix(x[match(CovarMat[,'SEQN'],x[,'SEQN']),-1]) ) )
 
+                CovarMat <- data.frame(CovarMat)
 
                 out.name <- paste0("Covariate_",substr(pathExt,2,2))
 
@@ -451,10 +453,5 @@ process_covar <- function(cohorts=c(2003,2005),
 
 }
 
-
-
-# process_flags()
-# process_mort()
-# process_covar()
 
 
