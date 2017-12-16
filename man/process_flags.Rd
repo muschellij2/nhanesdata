@@ -8,7 +8,7 @@ process_flags(write = FALSE, local = FALSE, localpath = NULL,
   window = 90, tol = 2, tol.upper = 99, ...)
 }
 \arguments{
-\item{write}{logical argument indicating whether a csv file of wear/non-wear flags
+\item{write}{logical argument indicating whether a .rda file of wear/non-wear flags
 should be created for each wave of processed data. Defaults to FALSE.}
 
 \item{local}{logical argument indicating whether the processed .rda accelerometry files are stored locally.

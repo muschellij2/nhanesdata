@@ -7,7 +7,7 @@
 process_accel(write = FALSE, local = FALSE, localpath = NULL)
 }
 \arguments{
-\item{write}{logical argument indicating whether a csv file should be created for each wave of processed data.
+\item{write}{logical argument indicating whether a .rda file should be created for each wave of processed data.
 Defaults to FALSE.}
 
 \item{local}{logical argument indicating whether the zippped raw .xpt accelerometry files are stored locally.
@@ -25,7 +25,9 @@ enough RAM available.
 }
 \examples{
 \dontrun{
-process_accel(write=FALSE)
+library("nhanesaccel")
+process_accel()
+process_flags()
 }
 
 }

@@ -4,11 +4,25 @@
 \alias{process_covar}
 \title{Process covariate data for NHANES 2003-2004 and 2005-2006 waves}
 \usage{
-process_covar(write = FALSE)
+process_covar(cohorts = c(2003, 2005), varnames = c("WTMEC2YR", "WTINT2YR",
+  "SDMVPSU", "SDMVSTRA", "RIDAGEMN", "RIDAGEEX", "RIDRETH1", "RIAGENDR",
+  "BMXWT", "BMXHT", "BMXBMI", "DMDEDUC2", "ALQ101", "ALQ110", "ALQ120Q",
+  "ALQ120U", "ALQ130", "SMQ020", "SMD030", "SMQ040", "SMD070", "MCQ220",
+  "MCQ160F", "MCQ160B", "MCQ160C", "PFQ061B", "PFQ061C", "DIQ010"),
+  dataPath = NULL, write = FALSE)
 }
 \arguments{
-\item{write}{logical argument indicating whether a csv file of wear/non-wear flags
-should be created for each wave of processed data. Defaults to FALSE.}
+\item{cohorts}{numeric vector with entires corresponding to the first year of a given
+NHANES wave of interest. Will only accept cohorts 2003-2004 and beyond.}
+
+\item{varnames}{character vector indicating which column names are to be searched for.
+Will check all files in dataPath}
+
+\item{dataPath}{file path where covariate data are saved. Covariate data must be in .XPT format,
+and should be in their own folder. For example, PAXRAW_C.XPT should not be located in the folder with
+your covariate files. This will not cause an error, but the code will take much longer to run.}
+
+\item{write}{logical argument indicating whether a .rda file of covariate data. Defaults to FALSE.}
 }
 \description{
 This function merges covariate data

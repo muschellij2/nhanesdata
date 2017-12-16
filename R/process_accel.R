@@ -46,7 +46,7 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
                                                    tolower(paste0(waves_accel[i],".xpt"))))
                 }
 
-                uid      <- unique(sim.data$SEQN)
+                uid <- as.character(unique(sim.data$SEQN))
 
                 ## read_xpt reads all variables in as numeric
                 ## check for truncation on reading in
@@ -95,17 +95,17 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
                 rm(list=c("k","x","inx_cur","sim.data","u_data"))
 
                 id2       <- rep(uid,each=7)
-                idweekday <- data.frame(SEQN=id2,PAXCAL=cal,PAXSTAT=stat,WEEKDAY=weekday)
+                idweekday <- data.frame(SEQN=id2,PAXCAL=cal,PAXSTAT=stat,WEEKDAY=weekday,wave=i, stringsAsFactors = FALSE)
                 rm(list=c("weekday","id2","uid"))
 
                 col.name <- paste0("MIN",1:1440)
 
                 pax      <- full.na$PAXINTEN
-                pax.wide <- as.data.frame(matrix(pax,ncol=1440,byrow=T))
+                pax.wide <- data.frame(matrix(pax,ncol=1440,byrow=T))
                 colnames(pax.wide)<-col.name
 
                 out.name <- paste0("PAXINTEN", "_", LETTERS[i+2])
-                assign(out.name, cbind(idweekday,pax.wide), envir=parent.frame())
+                assign(out.name, data.frame(idweekday,pax.wide,stringsAsFactors = FALSE), envir=parent.frame())
 
 
                 if(write){
@@ -205,7 +205,8 @@ process_flags <- function(write=FALSE, local=FALSE,localpath=NULL,
                 t2 = Sys.time()
                 print(paste('total time:', as.character(round(t2 - t1,2))))
 
-                out = cbind(full_data[,1:4], WMX)
+                out = data.frame(full_data[,-which(colnames(full_data)%in%paste0("MIN",1:1440)),drop=FALSE], WMX,
+                                 stringsAsFactors = FALSE)
                 names(out) = names(full_data)
 
                 out[is.na(full_data)] = NA ## put NAs back where they belong
@@ -284,45 +285,45 @@ process_mort <- function(write=FALSE){
 
                 for (j in 1:N){
 
-                        seqn = rbind(seqn,substr(raw.data[j],1,5))
-                        eligstat = rbind(eligstat,substr(raw.data[j],15,15))
-                        mortstat = rbind(mortstat,substr(raw.data[j],16,16))
-                        causeavl = rbind(causeavl,substr(raw.data[j],17,17))
-                        ucod_leading = rbind(ucod_leading,substr(raw.data[j],18,20))
-                        diabetes = rbind(diabetes,substr(raw.data[j],21,21))
-                        hyperten = rbind(hyperten,substr(raw.data[j],22,22))
+                        seqn = c(seqn,substr(raw.data[j],1,5))
+                        eligstat = c(eligstat,as.numeric(substr(raw.data[j],15,15)))
+                        mortstat = c(mortstat,as.numeric(substr(raw.data[j],16,16)))
+                        causeavl = c(causeavl,as.numeric(substr(raw.data[j],17,17)))
+                        ucod_leading = c(ucod_leading,substr(raw.data[j],18,20))
+                        diabetes = c(diabetes,as.numeric(substr(raw.data[j],21,21)))
+                        hyperten = c(hyperten,as.numeric(substr(raw.data[j],22,22)))
 
-                        permth_int = rbind(permth_int,substr(raw.data[j],44,46))
-                        permth_exm = rbind(permth_exm,substr(raw.data[j],47,49))
+                        permth_int = c(permth_int,as.numeric(substr(raw.data[j],44,46)))
+                        permth_exm = c(permth_exm,as.numeric(substr(raw.data[j],47,49)))
 
-                        mortsrce_ndi = rbind(mortsrce_ndi,substr(raw.data[j],50,50))
-                        mortsrce_cms = rbind(mortsrce_cms,substr(raw.data[j],51,51))
-                        mortsrce_ssa = rbind(mortsrce_ssa,substr(raw.data[j],52,52))
-                        mortsrce_dc = rbind(mortsrce_dc,substr(raw.data[j],53,53))
-                        mortsrce_dcl = rbind(mortsrce_dcl,substr(raw.data[j],54,54))
+                        mortsrce_ndi = c(mortsrce_ndi,substr(raw.data[j],50,50))
+                        mortsrce_cms = c(mortsrce_cms,substr(raw.data[j],51,51))
+                        mortsrce_ssa = c(mortsrce_ssa,substr(raw.data[j],52,52))
+                        mortsrce_dc = c(mortsrce_dc,substr(raw.data[j],53,53))
+                        mortsrce_dcl = c(mortsrce_dcl,substr(raw.data[j],54,54))
 
                 }
 
 
                 out.name <- paste0("Mortality_",LETTERS[i+2])
                 out <- data.frame(seqn, eligstat,
-                                          mortstat, causeavl,
-                                          ucod_leading, diabetes,
-                                          hyperten,
-                                          permth_exm, permth_int,
-                                          mortsrce_ndi, mortsrce_cms,
-                                          mortsrce_ssa, mortsrce_dc,
-                                          mortsrce_dcl,
-                                    stringsAsFactors=FALSE)
+                                  mortstat, causeavl,
+                                  ucod_leading, diabetes,
+                                  hyperten,
+                                  permth_exm, permth_int,
+                                  mortsrce_ndi, mortsrce_cms,
+                                  mortsrce_ssa, mortsrce_dc,
+                                  mortsrce_dcl,
+                                  stringsAsFactors=FALSE)
 
                 colnames(out) = c('SEQN', 'eligstat',
-                               'mortstat', 'causeavl',
-                               'ucod_leading', 'diabetes',
-                               'hyperten',
-                               'permth_exm', 'permth_int',
-                               'mortsrce_ndi', 'mortsrce_cms',
-                               'mortsrce_ssa', 'mortsrce_dc',
-                               'mortsrce_dcl')
+                                  'mortstat', 'causeavl',
+                                  'ucod_leading', 'diabetes',
+                                  'hyperten',
+                                  'permth_exm', 'permth_int',
+                                  'mortsrce_ndi', 'mortsrce_cms',
+                                  'mortsrce_ssa', 'mortsrce_dc',
+                                  'mortsrce_dcl')
 
                 assign(out.name, out, envir=parent.frame())
 
@@ -375,19 +376,18 @@ process_mort <- function(write=FALSE){
 #'
 #' @references
 #'
-#' @importFrom have read_xpt
 #'
 #' @export
 process_covar <- function(cohorts=c(2003,2005),
-                      varnames = c('WTMEC2YR','WTINT2YR','SDMVPSU','SDMVSTRA',
-                                   'RIDAGEMN','RIDAGEEX','RIDRETH1','RIAGENDR',
-                                   'BMXWT','BMXHT','BMXBMI','DMDEDUC','DMDEDUC2',
-                                   'ALQ101', 'ALQ110','ALQ120Q','ALQ120U','ALQ130',
-                                   'SMQ020','SMD030','SMQ040','SMQ120','SMD130','SMQ140','SMQ150','SMD160','SMQ170',
-                                   'SMQ680','SMQ710','SMQ720','SMD641','SMD070',
-                                   'MCQ220','MCQ160F','MCQ160B','MCQ160C','PFQ061B','PFQ061C', 'DIQ010'),
-                      dataPath=NULL,
-                      write=FALSE){
+                          varnames = c('WTMEC2YR','WTINT2YR','SDMVPSU','SDMVSTRA',
+                                       'RIDAGEMN','RIDAGEEX','RIDRETH1','RIAGENDR',
+                                       'BMXWT','BMXHT','BMXBMI','DMDEDUC2',
+                                       'ALQ101', 'ALQ110','ALQ120Q','ALQ120U','ALQ130',
+                                       'SMQ020','SMD030','SMQ040',
+                                       'SMD070',
+                                       'MCQ220','MCQ160F','MCQ160B','MCQ160C','PFQ061B','PFQ061C', 'DIQ010'),
+                          dataPath=NULL,
+                          write=FALSE){
         years    <- seq(2003, 2023, by=2)
         if(!all(cohorts %in% years)) stop("One or more cohorts invalid")
         stopifnot(length(cohorts) >= 1)
@@ -435,9 +435,12 @@ process_covar <- function(cohorts=c(2003,2005),
                 CovarMat           <- matrix(NA,ncol=totalCols,nrow=length(ids))
                 colnames(CovarMat) <- c('SEQN', unlist(sapply(covarMats,function(x) colnames(x)[-1])))
                 CovarMat[,'SEQN']  <- ids
-                invisible(lapply(covarMats, function(x) CovarMat[,colnames(x)[-1]] <<- as.matrix(x[match(CovarMat[,'SEQN'],x[,'SEQN']),-1]) ) )
-
                 CovarMat <- data.frame(CovarMat)
+                invisible(lapply(covarMats, function(x) CovarMat[,colnames(x)[-1]] <<- as.matrix(x[match(CovarMat$SEQN,x$SEQN),-1]) ) )
+
+
+
+                CovarMat$SEQN <- as.character(CovarMat$SEQN)
 
                 out.name <- paste0("Covariate_",substr(pathExt,2,2))
 
@@ -454,4 +457,87 @@ process_covar <- function(cohorts=c(2003,2005),
 }
 
 
+
+
+
+
+
+
+
+#' Remove days with too few/too much weartime and NHANES data quality flags.
+#'
+#' @description
+#' This function subsets accelerometry data by wear/non-wear time criteria, as well as
+#' NHANES data quality flags.
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#' process_accel(write=FALSE)
+#' }
+#'
+#' @references
+#'
+#'
+#' @export
+exclude_accel <- function(act, flags, threshold = 600, rm_PAXSTAT = TRUE, rm_PAXCAL = TRUE,
+                          return_act = FALSE){
+
+        stopifnot(all(is.finite(act$PAXSTAT),is.finite(act$PAXCAL)))
+        flag_nonwear <- rowSums(flags[, paste('MIN', 1:1440, sep='')], na.rm = TRUE) < threshold
+
+        ## remove nonwear days and days flagged by NHANES
+        cond <- c("flag_nonwear", "act$PAXSTAT!=1","act$PAXCAL!=1")[c(TRUE, rm_PAXSTAT, rm_PAXCAL)]
+        cond <- paste(cond, collapse="|")
+
+        if(return_act) return(eval(parse(text=paste("return(act[!(",cond, "),])"))))
+
+        eval(parse(text=paste("return(which(!(",cond,")))")))
+}
+
+
+
+
+#' Reweight NHANES accelerometry data
+#'
+#' @description
+#' This function re-weights accelerometry data for NHANES 2003-2004,2005-2006 waves
+#'
+#'
+#'
+#' @examples
+#' \dontrun{
+#' process_accel(write=FALSE)
+#' }
+#'
+#' @references
+#'
+#'
+#' @export
+reweight_accel <- function(data){
+        data$valid <- 1
+        data.wave1 <- subset(data, wave == 1)
+        data.wave2 <- subset(data, wave == 2)
+
+        data.wave1.adjusted <- nhanes.accel.reweight(acceldata=data.wave1,
+                                                     wave=1, seqn.column=1,
+                                                     include.column=which(colnames(data.wave1) == 'valid'))
+        # Rename previous 2-year weight variable so new one does not overwrite it
+
+        data.wave2.adjusted <- nhanes.accel.reweight(acceldata=data.wave2,
+                                                     wave=2, seqn.column=1,
+                                                     include.column=which(colnames(data.wave1) == 'valid'))
+
+        all.data <- rbind(data.wave1.adjusted, data.wave2.adjusted)
+        if(nrow(data.wave1) == 0 | nrow(data.wave2) == 0) {
+                all.data$wtmec4yr_adj <- all.data$wtmec2yr_adj
+        } else {
+                all.data$wtmec4yr_adj <- all.data$wtmec2yr_adj/2
+        }
+
+        all.data$NormWts <- (all.data$wtmec4yr_adj/sum(all.data$wtmec4yr_adj))*nrow(all.data)
+
+        all.data
+}
 

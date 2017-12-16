@@ -7,7 +7,7 @@
 process_mort(write = FALSE)
 }
 \arguments{
-\item{write}{logical argument indicating whether a csv file of wear/non-wear flags
+\item{write}{logical argument indicating whether a .rda file of wear/non-wear flags
 should be created for each wave of processed data. Defaults to FALSE.}
 }
 \description{
