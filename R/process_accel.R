@@ -14,7 +14,9 @@
 #' If FALSE, will download the data into a temporary file from the CDC website and process the data. If TRUE,
 #' the zipped data will be sourced locally. Defaults to FALSE.
 #'
-#' @param localpath character string indicating where the locally zipped raw .xpt files are. -- NEED TO ADD IN THIS FUNCITONALITY
+#' @param localpath character string indicating where the locally zipped raw .xpt files are.
+#'
+#' @param deleteraw logical argument indicating whether to delete the unzipped .xpt files after reading them into R.
 #'
 #' @examples
 #' \dontrun{
@@ -28,22 +30,36 @@
 #' @importFrom utils write.csv unzip
 #'
 #' @export
-process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
+process_accel <- function(write=FALSE, local=FALSE, localpath=NULL, deleteraw=TRUE){
         waves_accel <- paste0("PAXRAW_", c("C","D"))
         names_accel <- c("0304","0506")
         urls <- c("https://wwwn.cdc.gov/Nchs/Nhanes/2003-2004/PAXRAW_C.ZIP",
                   "https://wwwn.cdc.gov/Nchs/Nhanes/2005-2006/PAXRAW_D.ZIP")
         for(i in seq_along(waves_accel)){
+                datapath <- c()
                 if(!local){
+                        datapath <- system.file("extdat/act/",package="nhanesdata")
                         temp <- tempfile()
                         download.file(urls[i], temp)
                         sim.data <- read_xpt(unzip(temp,
                                                    tolower(paste0(waves_accel[i],".xpt"))))
                         unlink(temp)
                 }
-                if(local){
-                        sim.data <- read_xpt(unzip(paste0(waves_accel[i],".zip"),
-                                                   tolower(paste0(waves_accel[i],".xpt"))))
+                if(local & !is.null(localpath)){
+                        datapath <- localpath
+                        sim.data <- read_xpt(unzip(paste0(datapath, waves_accel[i],".ZIP"),
+                                                   tolower(paste0(waves_accel[i],".xpt")),
+                                                   exdir=datapath)
+                                             )
+                        file.remove(paste0(datapath, waves_accel[i],".xpt"))
+                }
+                if(local & is.null(localpath)){
+                        datapath <- system.file("extdat/act/",package="nhanesdata")
+                        sim.data <- read_xpt(unzip(paste0(datapath,waves_accel[i],".ZIP"),
+                                                   tolower(paste0(waves_accel[i],".xpt")),
+                                                   exdir=datapath)
+                                             )
+                        file.remove(paste0(datapath, waves_accel[i],".xpt"))
                 }
 
                 uid <- as.character(unique(sim.data$SEQN))
@@ -109,7 +125,8 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
 
 
                 if(write){
-                        eval(parse(text=paste0('save(', out.name,',file="', out.name, '.rda")')))
+                        eval(parse(text=paste0('save(', out.name,',file="', datapath, out.name, '.rda")')))
+                        message(paste0("Wave ", i, " Saved as: ", datapath, out.name))
                 }
 
                 rm(list=c("pax","pax.wide","col.name","out.name","idweekday"))
@@ -135,7 +152,8 @@ process_accel <- function(write=FALSE, local=FALSE, localpath=NULL){
 #' @param local logical argument indicating whether the processed .rda accelerometry files are stored locally.
 #' If FALSE, will load them from the package data.
 #'
-#' @param localpath character string indicating where the locally processed .rda files are (NEED TO ADD IN THIS FUNCTIONALITY)
+#' @param localpath character string indicating where the locally processed .rda files are if you don't want to use those processed and included
+#' in the package.
 #'
 #' @param window size of the moving window used to assess non-wear in minutes. Defaults to 90 minutes.
 #' See \code{\link{accel.weartime}} for more details.
