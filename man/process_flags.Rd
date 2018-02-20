@@ -14,7 +14,8 @@ should be created for each wave of processed data. Defaults to FALSE.}
 \item{local}{logical argument indicating whether the processed .rda accelerometry files are stored locally.
 If FALSE, will load them from the package data.}
 
-\item{localpath}{character string indicating where the locally processed .rda files are (NEED TO ADD IN THIS FUNCTIONALITY)}
+\item{localpath}{character string indicating where the locally processed .rda files are if you don't want to use those processed and included
+in the package.}
 
 \item{window}{size of the moving window used to assess non-wear in minutes. Defaults to 90 minutes.
 See \code{\link{accel.weartime}} for more details.}

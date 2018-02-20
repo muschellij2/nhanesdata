@@ -1,11 +1,13 @@
 Package: nhanesdata
 Type: Package
 Title: NHANES Accelerometry Data Pipeline
-Version: 1.0
-Author: Andrew Leroux [aut, cre]
-	Ciprian Crainiceanu[aut, cre]
-Maintainer: Andrew Leroux <aleroux2@jhu.edu>
-Description: A data package for processed NHANES accelerometry data with accompanying processing pipeline code.
+Version: 1.1
+Authors@R: c(person(given = "Andrew", family = "Leroux", 
+        role = c("aut", "cre"), email = "aleroux2@jhu.edu"), 
+        person(given = "Ciprian", family = "Crainiceanu", 
+        role = c("aut")))
+Description: A data package for processed NHANES accelerometry 
+        data with accompanying processing pipeline code.
 Depends:
     R (>= 3.2.4), accelerometry (>= 2.2.5), nhanesaccel (>= 2.1.1), haven (>= 1.1.0)
 License: GPL (>= 3)

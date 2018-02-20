@@ -4,7 +4,8 @@
 \alias{process_accel}
 \title{Process NHANES 2003-2004 and 2005-2006 accelerometry data}
 \usage{
-process_accel(write = FALSE, local = FALSE, localpath = NULL)
+process_accel(write = FALSE, local = FALSE, localpath = NULL,
+  deleteraw = TRUE)
 }
 \arguments{
 \item{write}{logical argument indicating whether a .rda file should be created for each wave of processed data.
@@ -14,7 +15,9 @@ Defaults to FALSE.}
 If FALSE, will download the data into a temporary file from the CDC website and process the data. If TRUE,
 the zipped data will be sourced locally. Defaults to FALSE.}
 
-\item{localpath}{character string indicating where the locally zipped raw .xpt files are. -- NEED TO ADD IN THIS FUNCITONALITY}
+\item{localpath}{character string indicating where the locally zipped raw .xpt files are.}
+
+\item{deleteraw}{logical argument indicating whether to delete the unzipped .xpt files after reading them into R.}
 }
 \description{
 This function processes the raw NHANES 2003-2004 and 2005-2006 accelerometry data
